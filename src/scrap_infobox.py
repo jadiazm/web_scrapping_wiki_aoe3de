@@ -2,10 +2,10 @@
 ╔═════════════════════════════════════════════════════════════════════╗
 ║                      🧩 SCRIPT INFORMATION 🧩                      ║
 ╠═════════════════════════════════════════════════════════════════════╣
-   -  👨‍💻 Author      : Jonathan Diaz
-   -  📧 Email       : jonathan.diazm5@gmail.com
-   -  📅 Created on  : 2024-12-20
-   -  📝 Description : Breve descripción del propósito del script
+    -  👨‍💻 Author      : Jonathan Diaz
+    -  📧 Email       : jonathan.diazm5@gmail.com
+    -  📅 Created on  : 2024-12-20
+    -  📝 Description : 
 ╠═════════════════════════════════════════════════════════════════════╣
 ║  Note: This script is the intellectual property of the author.      ║
 ║  Its use and modification for educational or personal purposes is   ║
@@ -15,17 +15,9 @@
 """
 
 from pathlib import Path
-from re import L
 
 import requests
 from bs4.element import Tag
-
-
-def fetch_page_content(url):
-    """Fetches the HTML content of the page."""
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.text
 
 
 def download_unit_icon(infobox: Tag, img_path: str):
@@ -48,26 +40,26 @@ def download_unit_icon(infobox: Tag, img_path: str):
             print(f"Error al descargar la imagen: {e}")
 
 
-def extract_item_vals(item, item_type: str):
+def extract_item_vals(item, item_type: str, label: str):
 
     if item_type == "text":
         vals = item.text.strip()
         return vals
-    
+
     if item_type == "list":
         full_text = ""
         vals = []
         for child in item.children:
             if child.name == "br":
                 if full_text:
-                    vals.append(full_text.strip()) 
+                    vals.append(full_text.strip())
                     full_text = ""
             else:
                 full_text += child.text
         if full_text:
             vals.append(full_text.strip())
         return vals
-    
+
     elif item_type == "dict":
         grouped_tags = []
         current_group = []
@@ -98,13 +90,22 @@ def extract_item_vals(item, item_type: str):
             try:
                 vals[group[1]] = group[0]
             except IndexError:
-                print("Information for could not be extracted in dict format. Present values: ", group)
-                # raise ValueError("Information could not be extracted in dict format. Values: ", group)
-                return group[0]
+                # print(
+                #     f"Information for label '{label}' could not be extracted in dict format.\n"
+                #     f"Present values: '{group}'"
+                # )
+                raise ValueError(
+                    f"Information for label '{label}' could not be extracted in dict format.\n"
+                    f"Present values: '{group}'"
+                )
+                # return group[0]
         return vals
-    
+
+    elif item_type == "ignore":
+        return None
+
     else:
-        raise ValueError(f"Invalid item type: {item_type}")
+        raise ValueError(f"Invalid item type: {str(item_type)}")
 
 
 def get_item_type(val: str, item_types: dict) -> str:
@@ -113,19 +114,29 @@ def get_item_type(val: str, item_types: dict) -> str:
             return key
     return None
 
+
 def extract_block_data(block: Tag, item_types: dict) -> dict:
     """Extracts the data from a block of the infobox."""
-    
+
     rows = block.find_all("div", class_="pi-item", recursive=False)
     data = {}
 
     for row in rows:
-        label = row.find("h3").text
+        h3 = row.find("h3")
+        if h3 is None:
+            continue
+        label = h3.text
         item = row.find("div", class_="pi-data-value")
 
         item_type = get_item_type(label, item_types)
 
-        values = extract_item_vals(item, item_type)
+        if item_type == "ignore":
+            continue
+
+        if item_type is None:
+            raise ValueError(f"Item type not found for label: '{label}'")
+
+        values = extract_item_vals(item, item_type, label)
         # Fill the block data dictionary with the label and its values
         data[label] = values
 
@@ -138,6 +149,8 @@ def extract_unit_data(infobox: Tag, item_types: dict) -> dict:
     blocks = infobox.find_all("section")
 
     unit_data = {}
+
+    unit_data["name"] = infobox.find("h2").text
 
     for block in blocks:
         block_title = block.find("h2").text
