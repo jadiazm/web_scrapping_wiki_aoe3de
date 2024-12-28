@@ -90,14 +90,14 @@ def extract_item_vals(item, item_type: str, label: str):
             try:
                 vals[group[1]] = group[0]
             except IndexError:
-                # print(
-                #     f"Information for label '{label}' could not be extracted in dict format.\n"
-                #     f"Present values: '{group}'"
-                # )
                 raise ValueError(
                     f"Information for label '{label}' could not be extracted in dict format.\n"
                     f"Present values: '{group}'"
                 )
+                # print(
+                #     f"Information for label '{label}' could not be extracted in dict format.\n"
+                #     f"Present values: '{group}'"
+                # )
                 # return group[0]
         return vals
 
@@ -150,10 +150,10 @@ def extract_unit_data(infobox: Tag, item_types: dict) -> dict:
 
     unit_data = {}
 
-    unit_data["name"] = infobox.find("h2").text
+    unit_data["name"] = infobox.find("h2").text.strip()
 
     for block in blocks:
-        block_title = block.find("h2").text
+        block_title = block.find("h2").text.strip()
 
         block_data = extract_block_data(block, item_types)
 
