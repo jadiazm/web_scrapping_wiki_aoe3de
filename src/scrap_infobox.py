@@ -20,6 +20,30 @@ import requests
 from bs4.element import Tag
 
 
+def find_infobox(fragment_id, infoboxes):
+    TARGET_GAME = "Age of Empires III"
+    
+    fragment_normalized = fragment_id.strip().replace(" ", "_").lower()
+    
+    for infobox in infoboxes:
+        unit_name = infobox.find("h2")
+        if not unit_name:
+            continue
+
+        unit_name_normalized = unit_name.text.strip().replace(" ", "_").lower()
+        game_div = infobox.find("div", class_="pi-data-value")
+
+        if not game_div:
+            continue
+
+        game = game_div.text.strip()
+
+        if TARGET_GAME in game and fragment_normalized == unit_name_normalized:
+            return infobox
+    
+    return None
+
+
 def download_unit_icon(infobox: Tag, img_path: str):
     """Downloads the icon of the unit."""
     # Find the icon image element in the infobox element
