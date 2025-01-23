@@ -20,17 +20,16 @@ import requests
 from bs4.element import Tag
 
 
-def find_infobox(fragment_id, infoboxes):
-    TARGET_GAME = "Age of Empires III"
-    
-    fragment_normalized = fragment_id.strip().replace(" ", "_").lower()
-    
-    for infobox in infoboxes:
-        unit_name = infobox.find("h2")
-        if not unit_name:
-            continue
+def norm_string(s):
+    return s.strip().replace(" ", "_").lower()
 
-        unit_name_normalized = unit_name.text.strip().replace(" ", "_").lower()
+
+def find_infobox(unit_to_search, infoboxes):
+
+    TARGET_GAME = "Age of Empires III"
+
+    for infobox in infoboxes:
+
         game_div = infobox.find("div", class_="pi-data-value")
 
         if not game_div:
@@ -38,10 +37,21 @@ def find_infobox(fragment_id, infoboxes):
 
         game = game_div.text.strip()
 
-        if TARGET_GAME in game and fragment_normalized == unit_name_normalized:
+        # Title verification
+        if TARGET_GAME not in game:
+            continue
+
+        # Unit name verification
+        unit_name = infobox.find("h2")
+        if not unit_name:
+            continue
+
+        norm_infobox = norm_string(unit_name.text)
+
+        if norm_infobox == unit_to_search:
             return infobox
-    
-    return None
+
+    raise ValueError("Infobox not found")
 
 
 def download_unit_icon(infobox: Tag, img_path: str):
