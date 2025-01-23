@@ -17,12 +17,30 @@
 import os
 import sys
 
+from bs4 import Tag
+
 project_path = os.path.abspath("..")
 
 sys.path.append(project_path)
 
 
-def get_units_hrefs(section, content) -> dict:
+def get_section_hrefs(section: str, content: Tag) -> dict:
+    """
+    Get the hyperlinks of the units for each section
+
+    Parameters:
+    ---
+    section (str): 
+        Section of units to get hyperlinks
+    content (Tag): 
+        HTML content that contains the section of units
+
+    Returns:
+    ---
+    dict: 
+        Dictionary with the unit names as keys and the hyperlinks as values
+    """
+        
     h2s = content.find_all("h2", recursive=False)
     for h2 in h2s:
         if h2.find("span", class_="mw-headline", recursive=False).text == section:
