@@ -132,14 +132,56 @@ def extract_item_vals(item, item_type: str, label: str):
         raise ValueError(f"Invalid item type: {str(item_type)}")
 
 
-def get_item_type(val: str, item_types: dict) -> str:
+def get_item_type(val: str) -> str:
+    item_types = {
+        "text": [
+            "Ability",
+            "Area of Effect",
+            "Auto gather",
+            "Garrison",
+            "Gatherers",
+            "Hit points",
+            "Introduced in",
+            "Kill XP",
+            "Line of Sight",
+            "Pronunciation",
+            "Range",
+            "Rate of Fire",
+            "Regeneration",
+            "Resource amount",
+            "Required Home City Card",
+            "Requires",
+            "Special ability",
+            "Speed",
+            "Train limit",
+            "Train XP",
+            "XP kill bounty",
+            "XP train bounty",
+        ],
+        "list": [
+            "Age",
+            "Civilization(s)",
+            "Fatten rate",
+            "Trained at",
+            "Type",
+        ],
+        "dict": [
+            "Bonus damage",
+            "Cost",
+            "Damage",
+            "Fatten rate",
+            "Resistance",
+            "Train time",
+        ],
+        "ignore": ["Internal name"],
+    }
     for key, values in item_types.items():
         if val in values:
             return key
     return None
 
 
-def extract_block_data(block: Tag, item_types: dict) -> dict:
+def extract_block_data(block: Tag) -> dict:
     """Extracts the data from a block of the infobox."""
 
     rows = block.find_all("div", class_="pi-item", recursive=False)
@@ -152,7 +194,7 @@ def extract_block_data(block: Tag, item_types: dict) -> dict:
         label = h3.text
         item = row.find("div", class_="pi-data-value")
 
-        item_type = get_item_type(label, item_types)
+        item_type = get_item_type(label)
 
         if item_type == "ignore":
             continue
@@ -167,7 +209,7 @@ def extract_block_data(block: Tag, item_types: dict) -> dict:
     return data
 
 
-def extract_unit_data(infobox: Tag, item_types: dict) -> dict:
+def extract_unit_data(infobox: Tag) -> dict:
 
     # Sections correspond to Groups of information Information, Training, Statistics, etc.
     blocks = infobox.find_all("section")
@@ -179,7 +221,7 @@ def extract_unit_data(infobox: Tag, item_types: dict) -> dict:
     for block in blocks:
         block_title = block.find("h2").text.strip()
 
-        block_data = extract_block_data(block, item_types)
+        block_data = extract_block_data(block)
 
         # Fill the unit data dictionary with the block title and its data
         unit_data[block_title] = block_data
