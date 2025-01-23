@@ -24,7 +24,6 @@ def fetch_page_content(url):
     response = requests.get(url)
     try:
         response.raise_for_status()
-        print("Request to the page was successful.")
         return response.text
     except requests.exceptions.HTTPError as e:
         print(f"Error HTTP: {e}")
