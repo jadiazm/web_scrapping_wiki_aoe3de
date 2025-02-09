@@ -25,16 +25,14 @@ sys.path.append(project_path)
 from bs4 import BeautifulSoup as bs
 from tqdm import tqdm
 
-from src.scrap_hrefs import get_section_hrefs
 from src.scrap_infobox import extract_unit_data
-from src.utils import fetch_page_content
+from src.utils import fetch_page_content, get_section_hrefs
 
 
 def norm_string(s):
     return s.strip().replace(" ", "_").lower()
 
 
-# 1. Extract: Get the data from the web
 def get_units_urls(url) -> list:
     
     units_url = url + "wiki/Unit_(Age_of_Empires_III)"
@@ -54,7 +52,6 @@ def get_units_urls(url) -> list:
     return units_urls
 
 
-# 2. Transform: Process the data into a structured format
 def get_infoboxes(url, target_game):
 
     try:
@@ -82,15 +79,13 @@ def get_infoboxes(url, target_game):
         raise Exception(f"Error: {e}")
 
 
-# 3. Load: Save the data int a json file
-def load_data(data, filename):
+def export_units_data(data, filename):
     with open(filename, 'w') as file:
         json.dump(data, file, indent=4)
     print(f"Data saved in {filename}")
 
 
-# ETL Integration
-def etl_process(url, output_file):
+def scrape_units_data(url, output_file):
 
     TARGET_GAME = "Age of Empires III"
 
@@ -117,7 +112,7 @@ def etl_process(url, output_file):
     
     print(f"Extracted data for {len(data)} units")
 
-    load_data(data, output_file)
+    export_units_data(data, output_file)
 
 
 if __name__ == "__main__":
@@ -125,4 +120,4 @@ if __name__ == "__main__":
     URL = "https://ageofempires.fandom.com/"
     OUTPUT_FILE = "data/units.json"
 
-    etl_process(URL, OUTPUT_FILE)
+    scrape_units_data(URL, OUTPUT_FILE)
