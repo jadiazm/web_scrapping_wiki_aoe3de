@@ -24,7 +24,7 @@ def norm_string(s):
     return s.strip().replace(" ", "_").lower()
 
 
-def find_infobox(unit_to_search, infoboxes):
+def find_unit_infobox(unit_to_search, infoboxes):
 
     TARGET_GAME = "Age of Empires III"
 
@@ -74,7 +74,7 @@ def download_unit_icon(infobox: Tag, img_path: str):
             print(f"Error al descargar la imagen: {e}")
 
 
-def extract_item_vals(item, item_type: str, label: str):
+def extract_item_vals(item, item_type: str):
 
     if item_type == "text":
         vals = item.text.strip()
@@ -124,15 +124,8 @@ def extract_item_vals(item, item_type: str, label: str):
             try:
                 vals[group[1]] = group[0]
             except IndexError:
-                raise ValueError(
-                    f"Information for label '{label}' could not be extracted in dict format.\n"
-                    f"Present values: '{group}'"
-                )
-                # print(
-                #     f"Information for label '{label}' could not be extracted in dict format.\n"
-                #     f"Present values: '{group}'"
-                # )
-                # return group[0]
+                raise ValueError(f"Error extracting dictionary values, present values: {current_group}")
+                
         return vals
 
     elif item_type == "ignore":
@@ -148,9 +141,12 @@ def get_item_type(val: str) -> str:
             "Ability",
             "Area of Effect",
             "Auto gather",
+            "Bonus damage",
+            "Banner army",
             "Garrison",
             "Gatherers",
             "Hit points",
+            "Healing",
             "Introduced in",
             "Kill XP",
             "Line of Sight",
@@ -176,14 +172,15 @@ def get_item_type(val: str) -> str:
             "Type",
         ],
         "dict": [
-            "Bonus damage",
+            # "Bonus damage",
             "Cost",
             "Damage",
             "Fatten rate",
             "Resistance",
+            "Resource bounty",
             "Train time",
         ],
-        "ignore": ["Internal name"],
+        "ignore": ["Internal name", "Size", "Use"],
     }
     for key, values in item_types.items():
         if val in values:
@@ -212,7 +209,11 @@ def extract_block_data(block: Tag) -> dict:
         if item_type is None:
             raise ValueError(f"Item type not found for label: '{label}'")
 
-        values = extract_item_vals(item, item_type, label)
+        try:
+            values = extract_item_vals(item, item_type)
+        except ValueError as e:
+            raise ValueError(f"\nError extracting values for label '{label}': {e}")
+
         # Fill the block data dictionary with the label and its values
         data[label] = values
 
@@ -224,14 +225,19 @@ def extract_unit_data(infobox: Tag) -> dict:
     # Sections correspond to Groups of information Information, Training, Statistics, etc.
     blocks = infobox.find_all("section")
 
+    unit_name = infobox.find("h2").text.strip()
+    
     unit_data = {}
-
-    unit_data["name"] = infobox.find("h2").text.strip()
+    unit_data["name"] = unit_name
 
     for block in blocks:
         block_title = block.find("h2").text.strip()
 
-        block_data = extract_block_data(block)
+        try:
+            block_data = extract_block_data(block)
+        except ValueError as e:
+            raise ValueError(f"\nError extracting data form block '{block_title}' in infobox '{unit_name}': {e}")
+            continue
 
         # Fill the unit data dictionary with the block title and its data
         unit_data[block_title] = block_data
