@@ -19,12 +19,6 @@ import os
 import requests
 from bs4 import Tag
 
-# import sys
-
-# project_path = os.path.abspath("..")
-
-# sys.path.append(project_path)
-
 
 def fetch_page_content(url):
     """Fetches the HTML content of the page."""
